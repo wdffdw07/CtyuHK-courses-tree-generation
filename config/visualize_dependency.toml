@@ -29,3 +29,4 @@ max_per_layer = 10           # 每层最多节点数（自动换行）
 # Clarity tweaks
 exclude_isolated = true     # 移除既无先修也无被依赖的孤立课程
 straight_edges = true       # 直线连边（减少弯曲重叠）
+reduce_transitive = true    # 移除传递依赖边（如 A→B→C 存在时移除 A→C，简化图形）

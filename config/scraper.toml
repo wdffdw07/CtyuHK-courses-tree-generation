@@ -5,7 +5,7 @@
 # 主要爬取的URL列表
 # 可以添加多个URL，每个URL一行
 urls = [
-    "https://www.cityu.edu.hk/catalogue/ug/202425/Major/BSC1_CSC-1.htm",
+    "https://www.cityu.edu.hk/catalogue/ug/current/Major/BSC1_DSC-1.htm",
     # 可以添加更多URL，例如：
     # "https://www.cityu.edu.hk/catalogue/ug/current/major/bsc-ee.htm",
     # "https://www.cityu.edu.hk/catalogue/ug/current/major/bsc-se.htm",

@@ -21,6 +21,37 @@ except ImportError as e:  # pragma: no cover
 from .common import load_relations, load_exclusions, build_graph
 
 
+def remove_transitive_edges(g):
+    """Remove transitive (redundant) edges from the graph.
+    
+    If there's a path A → B → C and also a direct edge A → C,
+    remove A → C because it's redundant (transitive).
+    
+    This simplifies the visualization by keeping only direct dependencies.
+    
+    Args:
+        g: NetworkX directed graph
+        
+    Returns:
+        New graph with transitive edges removed
+    """
+    # Use NetworkX's transitive_reduction
+    # This returns a new graph with the minimal set of edges
+    try:
+        # transitive_reduction removes edges that can be inferred from other paths
+        reduced = nx.transitive_reduction(g)
+        
+        # Copy node attributes from original graph
+        for node in reduced.nodes():
+            if node in g.nodes:
+                reduced.nodes[node].update(g.nodes[node])
+        
+        return reduced
+    except Exception:
+        # If reduction fails (e.g., cycles), return original graph
+        return g
+
+
 def find_roots(g) -> List[str]:
     """Find courses with no prerequisites (in-degree == 0)."""
     return [n for n in g.nodes if g.in_degree(n) == 0]
@@ -163,6 +194,7 @@ def render_dependency_tree(
     max_per_layer: Optional[int] = 16,
     exclude_isolated: bool = True,
     straight_edges: bool = True,
+    reduce_transitive: bool = True,
 ) -> str:
     """Render the course dependency DAG as a PNG image.
 
@@ -178,6 +210,7 @@ def render_dependency_tree(
         max_per_layer: wrap wide layers into multiple rows
         exclude_isolated: remove courses with no prerequisites and no dependents - default True
         straight_edges: draw straight edges (no curvature) - default True
+        reduce_transitive: remove redundant transitive edges (e.g., A→B→C removes A→C) - default True
         
     Returns:
         Path to written image file.
@@ -185,6 +218,10 @@ def render_dependency_tree(
     courses, edges = load_relations(db_path)
     excl_map = load_exclusions(db_path)
     g = build_graph(courses, edges)
+    
+    # Remove transitive edges to simplify the graph
+    if reduce_transitive:
+        g = remove_transitive_edges(g)
     
     # Optionally remove isolated nodes (no incoming and no outgoing edges)
     if exclude_isolated:

@@ -190,6 +190,7 @@ def cmd_run_all(args: argparse.Namespace) -> int:
         max_per_layer=dep_settings.get("max_per_layer", 16),
         exclude_isolated=dep_settings.get("exclude_isolated", True),
         straight_edges=dep_settings.get("straight_edges", True),
+        reduce_transitive=dep_settings.get("reduce_transitive", True),
     )
     
     # Roots graph
@@ -276,6 +277,7 @@ def cmd_visualize(args: argparse.Namespace) -> int:
             print("  max_per_layer=", getattr(args, "max_per_layer", None))
             print("  exclude_isolated=", not getattr(args, "include_isolated", False))
             print("  straight_edges=", not getattr(args, "curved_edges", False))
+            print("  reduce_transitive=", getattr(args, "reduce_transitive", True))
         base = Path(DEFAULT_OUTPUT_DIR)
         base.mkdir(parents=True, exist_ok=True)
         # find next vNNN
@@ -301,6 +303,7 @@ def cmd_visualize(args: argparse.Namespace) -> int:
             max_per_layer=getattr(args, "max_per_layer", 16),
             exclude_isolated=not getattr(args, "include_isolated", False),
             straight_edges=not getattr(args, "curved_edges", False),
+            reduce_transitive=getattr(args, "reduce_transitive", True),
         )
         # roots-only graph: load dedicated config if present (config/visualize_roots.toml)
         root_cfg_path = Path(__file__).parent / "config" / "visualize_roots.toml"
@@ -362,6 +365,7 @@ def cmd_visualize(args: argparse.Namespace) -> int:
             print("  max_per_layer=", getattr(args, "max_per_layer", None))
             print("  exclude_isolated=", not getattr(args, "include_isolated", False))
             print("  straight_edges=", not getattr(args, "curved_edges", False))
+            print("  reduce_transitive=", getattr(args, "reduce_transitive", True))
         if args.verbose:
             print(f"Rendering graph from {args.db} -> {out_path}")
         render_dependency_tree(
@@ -376,6 +380,7 @@ def cmd_visualize(args: argparse.Namespace) -> int:
             max_per_layer=getattr(args, "max_per_layer", 16),
             exclude_isolated=not getattr(args, "include_isolated", False),
             straight_edges=not getattr(args, "curved_edges", False),
+            reduce_transitive=getattr(args, "reduce_transitive", True),
         )
     if args.verbose:
         print("Graph image written:", out_path)
