@@ -239,7 +239,7 @@ python orchestrator.py run-all --verbose
 
 ### One-Click Full Pipeline
 
-Use the `run-all` command to execute the complete workflow: scrape → build database → generate visualizations
+Use the `run-all` command to execute the complete workflow: scrape → build database → ask if generate visualizations → interactive course query
 
 ```powershell
 py -3 orchestrator.py run-all --verbose
@@ -248,9 +248,63 @@ py -3 orchestrator.py run-all --verbose
 This will:
 
 1. Read URL from `config/scraper.toml`
-2. Scrape all course information
+2. Scrape all course information including semester data
 3. Build SQLite database (`outputs/courses.db`)
-4. Generate dependency and roots graphs in `outputs/vNNN/` directory
+4. **Ask if you want to generate visualizations** (enter yes/y to generate, no/n to skip)
+5. Optional: Generate dependency and roots graphs in `outputs/vNNN/` directory
+6. **Launch interactive course query system**
+
+### Interactive Course Query Feature 🆕
+
+After running `run-all`, the system automatically starts an interactive Q&A session where you can:
+
+1. **Enter completed course codes** (separate multiple courses with spaces or commas)
+   
+   ```text
+   > CS1315 SDSC1001
+   ```
+
+2. **Select semester to query**
+   
+   ```text
+   Enter semester to query (A/B, or press Enter for all semesters):
+   > A
+   ```
+   
+   - Enter `A` - Show only Semester A courses
+   - Enter `B` - Show only Semester B courses  
+   - Press Enter - Show courses from all semesters
+
+3. **View intelligent recommendations** organized into categories:
+   - ✅ **Available Courses** - All prerequisites satisfied
+   - 🌱 **Root Courses** - No prerequisites required (entry-level courses)
+   - ⚠️ **Special Requirements** - Courses needing special approval or conditions (e.g., year level, CEC approval)
+   - 💼 **Internship Programs** - Various internship courses
+   - 📖 **Related Follow-up Courses** - Some prerequisites met, shows what's still needed
+
+4. Enter `q` to exit the query
+
+**Example Output**:
+
+```text
+✅ Available Courses (3 courses)
+   • SDSC2003     Human Contexts and Ethics in Data Science
+   • CS2334       Data Structures for Data Science
+
+🌱 Root Courses (15 courses)
+   • CS1315       Introduction to Computer Programming
+   • GE1501       Chinese Civilisation - History and Philosophy
+   ...
+
+⚠️ Special Requirements (2 courses)
+   • SDSC3026     International Professional Development
+     Requirement: (1) Year 3 completed (2) CEC approval required
+
+💼 Internship Programs (6 courses)
+   • SDSC0001     Internship
+   • SDSC0002     Internship
+   ...
+```
 
 ## Usage
 
@@ -278,9 +332,10 @@ python orchestrator.py build-db --major-url "https://www.cityu.edu.hk/catalogue/
 
 Produces `outputs/courses.db` with tables:
 
-- `courses(course_code PRIMARY KEY, course_title, offering_unit, credit_units, duration, aims, assessment_json, pdf_url, url)`
+- `courses(course_code PRIMARY KEY, course_title, offering_unit, credit_units, duration, semester, aims, assessment_json, pdf_url, url)` 🆕 Added `semester` field
 - `prerequisites(course_code, prereq_code)` composite PK
 - `exclusions(course_code, excluded_code)` composite PK
+- `special_requirements(course_code PRIMARY KEY, requirement_text)` 🆕 Text-based special requirements
 
 ### Visualize course graphs (from SQLite DB)
 

@@ -17,166 +17,11 @@ from core.filter.check import load_allowed_codes, filter_db_by_allowed
 from core.vis.dependency import render_dependency_tree
 from core.vis.roots import render_root_courses
 from core.config import load_config as _load_config
+from core.query import interactive_course_query
 
 DEFAULT_OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "outputs")
 DEFAULT_CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
 os.makedirs(DEFAULT_OUTPUT_DIR, exist_ok=True)
-
-
-def find_available_courses(db_path: str, completed_courses: list) -> dict:
-    """Find courses that can be taken based on completed courses.
-    
-    Args:
-        db_path: Path to SQLite database
-        completed_courses: List of completed course codes
-        
-    Returns:
-        Dictionary with:
-        - 'available': courses with all prerequisites met
-        - 'no_prereq': courses with no prerequisites (root courses)
-        - 'completed_children': direct children of completed courses
-    """
-    import sqlite3
-    
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    
-    # Normalize completed courses to uppercase
-    completed = set(c.strip().upper() for c in completed_courses)
-    
-    # Get all courses
-    cursor.execute("SELECT course_code, course_title FROM courses")
-    all_courses = {row[0]: row[1] for row in cursor.fetchall()}
-    
-    # Get all prerequisite relationships
-    cursor.execute("SELECT course_code, prereq_code FROM prerequisites")
-    prereqs = {}
-    for course, prereq in cursor.fetchall():
-        if course not in prereqs:
-            prereqs[course] = []
-        prereqs[course].append(prereq)
-    
-    # Find root courses (no prerequisites)
-    no_prereq = []
-    for course in all_courses:
-        if course not in prereqs and course not in completed:
-            no_prereq.append((course, all_courses[course]))
-    
-    # Find available courses (all prerequisites met)
-    available = []
-    for course in all_courses:
-        if course in completed:
-            continue
-        if course in prereqs:
-            # Check if all prerequisites are in completed
-            if all(p in completed for p in prereqs[course]):
-                available.append((course, all_courses[course]))
-        else:
-            # No prerequisites, already in no_prereq
-            pass
-    
-    # Find children of completed courses (courses that have completed courses as prerequisites)
-    completed_children = []
-    for course in all_courses:
-        if course in completed:
-            continue
-        if course in prereqs:
-            # Check if any prerequisite is in completed (direct children)
-            if any(p in completed for p in prereqs[course]):
-                completed_children.append((course, all_courses[course], prereqs[course]))
-    
-    conn.close()
-    
-    return {
-        'available': sorted(available),
-        'no_prereq': sorted(no_prereq),
-        'completed_children': sorted(completed_children, key=lambda x: x[0])
-    }
-
-
-def interactive_course_query(db_path: str, verbose: bool = False):
-    """Interactive session for querying available courses based on completed courses."""
-    print("\n" + "=" * 70)
-    print("📚 交互式课程查询 / Interactive Course Query")
-    print("=" * 70)
-    print("\n提示：")
-    print("  • 你可以直接从 outputs 文件夹里查看课程树")
-    print("  • 也可以直接告诉我你已经学过哪些课程，我将帮你查找可选课程")
-    print("\nTips:")
-    print("  • You can view the course tree directly from the outputs folder")
-    print("  • Or tell me which courses you've completed, and I'll find available courses for you")
-    print("\n" + "-" * 70)
-    
-    while True:
-        print("\n请输入已完成的课程代码 (多个课程用空格或逗号分隔，输入 'q' 退出):")
-        print("Enter completed course codes (separate with spaces/commas, 'q' to quit):")
-        user_input = input("> ").strip()
-        
-        if not user_input or user_input.lower() == 'q':
-            print("\n感谢使用！Goodbye! 👋\n")
-            break
-        
-        # Parse input - support space or comma separation
-        completed = []
-        for item in user_input.replace(',', ' ').split():
-            if item.strip():
-                completed.append(item.strip())
-        
-        if not completed:
-            print("⚠️  未检测到有效的课程代码 / No valid course codes detected")
-            continue
-        
-        print(f"\n🔍 正在分析已完成课程: {', '.join(completed)}")
-        print(f"   Analyzing completed courses: {', '.join(completed)}\n")
-        
-        try:
-            results = find_available_courses(db_path, completed)
-            
-            # Display results
-            print("=" * 70)
-            
-            # 1. Available courses (all prerequisites met)
-            if results['available']:
-                print(f"\n✅ 可直接选修的课程 ({len(results['available'])} 门)")
-                print(f"   Available Courses (all prerequisites met):\n")
-                for code, title in results['available']:
-                    print(f"   • {code:12s} {title}")
-            else:
-                print("\n✅ 可直接选修的课程: 无")
-                print("   Available Courses: None")
-            
-            # 2. Courses that depend on completed courses (might have other prereqs)
-            if results['completed_children']:
-                print(f"\n📖 相关后续课程 ({len(results['completed_children'])} 门)")
-                print(f"   Related Follow-up Courses (may have other prerequisites):\n")
-                for code, title, prereqs in results['completed_children']:
-                    prereq_status = []
-                    for p in prereqs:
-                        if p.upper() in [c.upper() for c in completed]:
-                            prereq_status.append(f"✓{p}")
-                        else:
-                            prereq_status.append(f"✗{p}")
-                    prereq_str = ", ".join(prereq_status)
-                    print(f"   • {code:12s} {title}")
-                    print(f"     前置要求 / Prerequisites: {prereq_str}")
-            
-            # 3. Root courses (no prerequisites)
-            if results['no_prereq']:
-                print(f"\n🌱 无前置要求的课程 ({len(results['no_prereq'])} 门)")
-                print(f"   Root Courses (no prerequisites required):\n")
-                for code, title in results['no_prereq'][:10]:  # Limit to first 10
-                    print(f"   • {code:12s} {title}")
-                if len(results['no_prereq']) > 10:
-                    print(f"   ... 还有 {len(results['no_prereq']) - 10} 门课程")
-                    print(f"   ... and {len(results['no_prereq']) - 10} more courses")
-            
-            print("\n" + "=" * 70)
-            
-        except Exception as e:
-            print(f"\n❌ 查询出错 / Error occurred: {e}")
-            if verbose:
-                import traceback
-                traceback.print_exc()
 
 
 def cmd_scrape_major(args: argparse.Namespace) -> int:
@@ -309,73 +154,99 @@ def cmd_run_all(args: argparse.Namespace) -> int:
         out_dir=out_dir,
     )
     
+    # Step 2: Ask if user wants to generate visualizations
+    print("\n" + "=" * 60)
+    print("是否生成课程依赖关系图？")
+    print("Generate course dependency visualizations?")
+    print("=" * 60)
+    print("输入 'yes' 或 'y' 生成图像，输入 'no' 或 'n' 跳过")
+    print("Enter 'yes' or 'y' to generate, 'no' or 'n' to skip:")
+    
+    user_response = input("> ").strip().lower()
+    
+    if user_response in ['yes', 'y', '是', '好']:
+        if args.verbose:
+            print("\n" + "=" * 60)
+            print("STEP 2/3: Generating visualizations")
+            print("=" * 60)
+        
+        # Generate visualizations (bundle version)
+        version_num = 1
+        version_dir = os.path.join(out_dir, f"v{version_num:03d}")
+        while os.path.exists(version_dir):
+            version_num += 1
+            version_dir = os.path.join(out_dir, f"v{version_num:03d}")
+        os.makedirs(version_dir, exist_ok=True)
+        
+        # Load profile configs
+        config_dir = Path(__file__).parent / "config"
+        
+        # Dependency graph
+        dep_cfg_path = config_dir / "visualize_dependency.toml"
+        dep_cfg = _load_config(str(dep_cfg_path)) if dep_cfg_path.exists() else {}
+        dep_settings = dep_cfg.get("visualize", {}) if isinstance(dep_cfg, dict) else {}
+        
+        dep_out = os.path.join(version_dir, f"dependency_v{version_num:03d}.png")
+        if args.verbose:
+            print(f"\nRendering dependency graph -> {dep_out}")
+        
+        render_dependency_tree(
+            db_path,
+            dep_out,
+            highlight_cycles=dep_settings.get("highlight_cycles", True),
+            focus=dep_settings.get("focus"),
+            layered=not dep_settings.get("no_layered", False),
+            max_depth=dep_settings.get("max_depth"),
+            truncate_title=dep_settings.get("truncate_title", 40),
+            color_by_unit=not dep_settings.get("no_unit_colors", False),
+            max_per_layer=dep_settings.get("max_per_layer", 16),
+            exclude_isolated=dep_settings.get("exclude_isolated", True),
+            straight_edges=dep_settings.get("straight_edges", True),
+            reduce_transitive=dep_settings.get("reduce_transitive", True),
+        )
+        
+        # Roots graph
+        roots_cfg_path = config_dir / "visualize_roots.toml"
+        roots_cfg = _load_config(str(roots_cfg_path)) if roots_cfg_path.exists() else {}
+        roots_settings = roots_cfg.get("visualize", {}) if isinstance(roots_cfg, dict) else {}
+        
+        roots_out = os.path.join(version_dir, f"roots_only_v{version_num:03d}.png")
+        if args.verbose:
+            print(f"Rendering roots graph -> {roots_out}")
+        
+        render_root_courses(
+            db_path,
+            roots_out,
+            truncate_title=roots_settings.get("truncate_title", 40),
+            color_by_unit=roots_settings.get("color_by_unit", True),
+            max_per_row=roots_settings.get("max_per_row", 1),
+        )
+        
+        if args.verbose:
+            print(f"\n{'=' * 60}")
+            print(f"✓ 可视化完成！ / Visualization Complete!")
+            print(f"  - Output directory: {version_dir}")
+            print(f"  - Dependency graph: {dep_out}")
+            print(f"  - Roots graph: {roots_out}")
+            print(f"{'=' * 60}")
+    else:
+        if args.verbose:
+            print("\n跳过可视化生成 / Skipping visualization")
+    
+    # Step 3: Interactive course query
     if args.verbose:
         print("\n" + "=" * 60)
-        print("STEP 2/2: Generating visualizations")
+        print("STEP 3/3: Interactive Course Query")
         print("=" * 60)
-    
-    # Step 2: Generate visualizations (bundle version)
-    version_num = 1
-    version_dir = os.path.join(out_dir, f"v{version_num:03d}")
-    while os.path.exists(version_dir):
-        version_num += 1
-        version_dir = os.path.join(out_dir, f"v{version_num:03d}")
-    os.makedirs(version_dir, exist_ok=True)
-    
-    # Load profile configs
-    config_dir = Path(__file__).parent / "config"
-    
-    # Dependency graph
-    dep_cfg_path = config_dir / "visualize_dependency.toml"
-    dep_cfg = _load_config(str(dep_cfg_path)) if dep_cfg_path.exists() else {}
-    dep_settings = dep_cfg.get("visualize", {}) if isinstance(dep_cfg, dict) else {}
-    
-    dep_out = os.path.join(version_dir, f"dependency_v{version_num:03d}.png")
-    if args.verbose:
-        print(f"\nRendering dependency graph -> {dep_out}")
-    
-    render_dependency_tree(
-        db_path,
-        dep_out,
-        highlight_cycles=dep_settings.get("highlight_cycles", True),
-        focus=dep_settings.get("focus"),
-        layered=not dep_settings.get("no_layered", False),
-        max_depth=dep_settings.get("max_depth"),
-        truncate_title=dep_settings.get("truncate_title", 40),
-        color_by_unit=not dep_settings.get("no_unit_colors", False),
-        max_per_layer=dep_settings.get("max_per_layer", 16),
-        exclude_isolated=dep_settings.get("exclude_isolated", True),
-        straight_edges=dep_settings.get("straight_edges", True),
-        reduce_transitive=dep_settings.get("reduce_transitive", True),
-    )
-    
-    # Roots graph
-    roots_cfg_path = config_dir / "visualize_roots.toml"
-    roots_cfg = _load_config(str(roots_cfg_path)) if roots_cfg_path.exists() else {}
-    roots_settings = roots_cfg.get("visualize", {}) if isinstance(roots_cfg, dict) else {}
-    
-    roots_out = os.path.join(version_dir, f"roots_only_v{version_num:03d}.png")
-    if args.verbose:
-        print(f"Rendering roots graph -> {roots_out}")
-    
-    render_root_courses(
-        db_path,
-        roots_out,
-        truncate_title=roots_settings.get("truncate_title", 40),
-        color_by_unit=roots_settings.get("color_by_unit", True),
-        max_per_row=roots_settings.get("max_per_row", 1),
-    )
-    
-    if args.verbose:
-        print(f"\n{'=' * 60}")
-        print(f"✓ Complete! Output directory: {version_dir}")
-        print(f"  - Database: {db_path}")
-        print(f"  - Dependency graph: {dep_out}")
-        print(f"  - Roots graph: {roots_out}")
-        print(f"{'=' * 60}")
     
     # Start interactive course query session
     interactive_course_query(db_path, verbose=args.verbose)
+    
+    if args.verbose:
+        print(f"\n{'=' * 60}")
+        print(f"✓ 完成！数据库已保存 / Complete! Database saved")
+        print(f"  - Database: {db_path}")
+        print(f"{'=' * 60}")
     
     return 0
 

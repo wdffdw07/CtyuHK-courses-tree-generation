@@ -71,6 +71,7 @@ def build_course_db(
         cur.execute("DROP TABLE IF EXISTS courses")
         cur.execute("DROP TABLE IF EXISTS prerequisites")
         cur.execute("DROP TABLE IF EXISTS exclusions")
+        cur.execute("DROP TABLE IF EXISTS special_requirements")
     
     # Create tables
     cur.execute(
@@ -80,6 +81,7 @@ def build_course_db(
         "offering_unit TEXT, "
         "credit_units TEXT, "
         "duration TEXT, "
+        "semester TEXT, "
         "aims TEXT, "
         "assessment_json TEXT, "
         "pdf_url TEXT, "
@@ -97,6 +99,11 @@ def build_course_db(
         "excluded_code TEXT, "
         "PRIMARY KEY(course_code, excluded_code))"
     )
+    cur.execute(
+        "CREATE TABLE IF NOT EXISTS special_requirements ("
+        "course_code TEXT PRIMARY KEY, "
+        "requirement_text TEXT)"
+    )
     
     # Insert course data
     for c in mp.courses:
@@ -105,13 +112,14 @@ def build_course_db(
             continue
         
         cur.execute(
-            "INSERT OR REPLACE INTO courses VALUES (?,?,?,?,?,?,?,?,?)",
+            "INSERT OR REPLACE INTO courses VALUES (?,?,?,?,?,?,?,?,?,?)",
             (
                 code,
                 c.get("course_title"),
                 c.get("offering_unit"),
                 c.get("credit_units"),
                 c.get("duration"),
+                c.get("semester"),
                 c.get("aims"),
                 json.dumps(c.get("assessment") or {}, ensure_ascii=False),
                 c.get("pdf_url"),
@@ -120,7 +128,27 @@ def build_course_db(
         )
         
         # Extract and insert prerequisites
-        prereq_codes = set(re.findall(r"[A-Z]{2,}\d{3,4}", c.get("prerequisites") or ""))
+        prereq_text = c.get("prerequisites") or ""
+        prereq_codes = set(re.findall(r"[A-Z]{2,}\d{3,4}", prereq_text))
+        
+        # Check if there are no prerequisite codes but there is text content
+        # This indicates special text requirements
+        if not prereq_codes and prereq_text and prereq_text.strip():
+            # Clean up the text (remove extra whitespace)
+            cleaned_text = re.sub(r'\s+', ' ', prereq_text).strip()
+            # Skip if it's just "Nil" or "None" or similar, or contains only HKDSE requirements
+            lower_text = cleaned_text.lower()
+            is_hkdse_only = 'hkdse' in lower_text or 'dse' in lower_text
+            is_nil = lower_text in ['nil', 'none', 'n/a', 'na', '-', '']
+            
+            # Only store if it's not nil and not HKDSE-only requirement
+            if not is_nil and not is_hkdse_only:
+                cur.execute(
+                    "INSERT OR REPLACE INTO special_requirements VALUES (?,?)",
+                    (code, cleaned_text)
+                )
+        
+        # Insert normal prerequisite codes
         for p in prereq_codes:
             if p != code:
                 cur.execute("INSERT OR IGNORE INTO prerequisites VALUES (?,?)", (code, p))
@@ -149,15 +177,18 @@ def build_course_db(
     n_prereq = cur.fetchone()[0]
     cur.execute("SELECT COUNT(*) FROM exclusions")
     n_excl = cur.fetchone()[0]
+    cur.execute("SELECT COUNT(*) FROM special_requirements")
+    n_special = cur.fetchone()[0]
     
     conn.close()
     
     if verbose:
-        print(f"DB saved -> {db_path} courses={n_courses} prereq={n_prereq} excl={n_excl}")
+        print(f"DB saved -> {db_path} courses={n_courses} prereq={n_prereq} excl={n_excl} special={n_special}")
     
     return {
         "courses": n_courses,
         "prerequisites": n_prereq,
         "exclusions": n_excl,
+        "special_requirements": n_special,
         "db_path": db_path
     }

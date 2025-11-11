@@ -27,6 +27,19 @@ def parse_course_page(code: str, url: str, html: str) -> Dict[str, Any]:
     offering_unit = text_or_none(soup.select_one("#div_offering_dept"))
     credit_units = text_or_none(soup.select_one("#div_course_credits"))
     duration = text_or_none(soup.select_one("#div_course_duration"))
+    
+    # Extract semester from course offering term (e.g., "Semester A 2025/26" -> "A")
+    semester_raw = text_or_none(soup.select_one("#div_course_offering_term"))
+    semester = None
+    if semester_raw:
+        # Extract semester letter (A, B, or both)
+        if 'Semester A' in semester_raw and 'Semester B' in semester_raw:
+            semester = 'A, B'
+        elif 'Semester A' in semester_raw:
+            semester = 'A'
+        elif 'Semester B' in semester_raw:
+            semester = 'B'
+    
     prerequisites_raw = text_or_none(soup.select_one("#div_prerequisites"))
     prerequisites = prerequisites_raw.replace("\n", " ") if prerequisites_raw else None
     exclusive_raw = text_or_none(soup.select_one("#div_exclusive_courses"))
@@ -56,6 +69,7 @@ def parse_course_page(code: str, url: str, html: str) -> Dict[str, Any]:
         "offering_unit": offering_unit,
         "credit_units": credit_units,
         "duration": duration,
+        "semester": semester,
         "prerequisites": prerequisites,
         "exclusive_courses": exclusive_courses,
         "aims": aims,
