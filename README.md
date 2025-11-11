@@ -4,13 +4,82 @@
 
 This project scrapes City University (CityU) undergraduate curriculum major pages and course detail pages, then outputs structured JSON/CSV and a relational SQLite database of courses and their prerequisite/exclusion relations, with visualization support for course dependency graphs.
 
+## Environment Setup (Windows - Beginner-Friendly)
+
+Follow these step-by-step instructions (no programming experience required):
+
+### Step 0: Install Python (One-Time Setup)
+
+- Download and install Python 3.11 or higher from <https://www.python.org/downloads/>
+- During installation, check "Add python.exe to PATH" (if shown)
+
+After installation, open a new PowerShell window and verify:
+
+```powershell
+py -3 --version
+```
+
+If `py` command is not found, try:
+
+```powershell
+python --version
+```
+
+### Step 1: Open Project Folder in PowerShell
+
+- Method A: In File Explorer, type `powershell` in the address bar and press Enter
+- Method B: In VS Code, go to Terminal → New Terminal (it opens in the project directory automatically)
+
+Verify you're in the correct directory by checking for README.md:
+
+```powershell
+dir
+```
+
+### Step 2: Install Dependencies (First Time Only)
+
+```powershell
+py -3 -m pip install -U pip
+py -3 -m pip install -r requirements.txt
+```
+
+If you get "py not found" error, replace `py -3` with `python`:
+
+```powershell
+python -m pip install -U pip
+python -m pip install -r requirements.txt
+```
+
+### Common Beginner Issues (Instant Fixes)
+
+- "py is not recognized as a command" → Use `python` instead of `py -3`, or restart PowerShell
+- "pip is not recognized" → Use `python -m pip ...` instead of `pip ...`
+- "requirements.txt not found" → Run `dir` to confirm you're in the project root directory
+- Network/certificate errors → Try again later or switch networks; first-time downloads may be slow
+
+### Advanced (Optional): Use Virtual Environment for Clean Isolation
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\activate
+python -m pip install -U pip
+pip install -r requirements.txt
+python orchestrator.py run-all --verbose
+```
+
+To exit the virtual environment:
+
+```powershell
+deactivate
+```
+
+---
+
 ## 🚀 Beginner Quick Start (Super Simple)
 
-**Just 2 steps** to see the course dependency graph (default config is ready to go):
+**After completing the environment setup above, just 2 steps** to see the course dependency graph:
 
 ### Step 1: Run the Command in PowerShell
-
-After opening the project folder (see "Environment Setup" below for details), execute:
 
 ```powershell
 py -3 orchestrator.py run-all --verbose
@@ -105,6 +174,10 @@ Key components:
   - `build-db` to produce a SQLite database of all courses and relations for a major.
 
   - Visualization utilities are included under the `visualize` subcommand to render dependency graphs from the SQLite DB.
+
+## Quick Start
+
+### Configuration File
 
 ## Environment Setup (Windows - Beginner-Friendly)
 
