@@ -4,6 +4,12 @@
 
 This project scrapes City University (CityU) undergraduate curriculum major pages and course detail pages, then outputs structured JSON/CSV and a relational SQLite database of courses and their prerequisite/exclusion relations, with visualization support for course dependency graphs.
 
+## Download Method
+
+1. Click the green "Code" button
+2. Click "Download ZIP"
+3. Extract the ZIP file
+
 ## Environment Setup (Windows - Beginner-Friendly)
 
 Follow these step-by-step instructions (no programming experience required):
