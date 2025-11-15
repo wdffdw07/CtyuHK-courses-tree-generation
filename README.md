@@ -24,7 +24,18 @@ python --version
 
 You should see something like `Python 3.11.x` or higher.
 
-### Step 1: Install uv Package Manager (One-Time Setup)
+### Step 1: Open Project Folder in PowerShell
+
+- Method A: In File Explorer, type `powershell` in the address bar and press Enter
+- Method B: In VS Code, go to Terminal → New Terminal (it opens in the project directory automatically)
+
+Verify you're in the correct directory by checking for README.md:
+
+```powershell
+dir
+```
+
+### Step 2: Install uv Package Manager (One-Time Setup)
 
 uv is a modern, fast Python package manager. Install it with pip:
 
@@ -44,20 +55,9 @@ Create a virtual environment:
 uv venv
 ```
 
-### Step 1: Open Project Folder in PowerShell
-
-- Method A: In File Explorer, type `powershell` in the address bar and press Enter
-- Method B: In VS Code, go to Terminal → New Terminal (it opens in the project directory automatically)
-
-Verify you're in the correct directory by checking for README.md:
-
-```powershell
-dir
-```
-
 ### Step 3: Install Dependencies (First Time Only)
 
-Install all project dependencies (uv will use the virtual environment created in Step 1):
+Install all project dependencies (uv will use the virtual environment created in Step 2):
 
 ```powershell
 uv pip install -r requirements.txt

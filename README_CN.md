@@ -22,7 +22,18 @@ python --version
 
 应该看到类似 `Python 3.11.x` 或更高版本。
 
-### 步骤 1：安装 uv 包管理器（只做一次）
+### 步骤 1：在 PowerShell 打开本项目文件夹
+
+- 方法 A：在资源管理器地址栏输入 powershell 回车
+- 方法 B：在 VS Code 顶部菜单：Terminal → New Terminal（新终端），它会自动在项目目录打开
+
+可用下面命令确认当前目录里能看到 README_CN.md：
+
+```powershell
+dir
+```
+
+### 步骤 2：安装 uv 包管理器（只做一次）
 
 uv 是一个现代化、快速的 Python 包管理器。用 pip 安装它：
 
@@ -40,17 +51,6 @@ uv --version
 
 ```powershell
 uv venv
-```
-
-### 步骤 1：在 PowerShell 打开本项目文件夹
-
-- 方法 A：在资源管理器地址栏输入 powershell 回车
-- 方法 B：在 VS Code 顶部菜单：Terminal → New Terminal（新终端），它会自动在项目目录打开
-
-可用下面命令确认当前目录里能看到 README_CN.md：
-
-```powershell
-dir
 ```
 
 ### 步骤 3：安装依赖（只需第一次）
@@ -143,90 +143,6 @@ uv run python orchestrator.py run-all --verbose
 
 ## 架构
 
----
-
-本项目用于爬取香港城市大学（CityU）本科课程专业页面及课程详细页面，输出结构化的 JSON/CSV 数据和关系型 SQLite 数据库，包含课程及其前置课程、互斥课程关系，并支持可视化课程依赖关系图。
-
-## 环境配置（Windows，新手版）
-
-按下面步骤一步一步来，无需懂编程：
-
-### 步骤 0：安装 Python（只做一次）
-
-- 到 <https://www.python.org/downloads/> 下载并安装 Python 3.11 或更高版本
-- 安装时勾选 “Add python.exe to PATH”（如果看到了）
-
-安装好后，打开新的 PowerShell 窗口，确认版本：
-
-```powershell
-py -3 --version
-```
-
-如果提示找不到 py 命令，请改用：
-
-```powershell
-python --version
-```
-
-### 步骤 1：在 PowerShell 打开本项目文件夹
-
-- 方法 A：在资源管理器地址栏输入 powershell 回车
-- 方法 B：在 VS Code 顶部菜单：Terminal → New Terminal（新终端），它会自动在项目目录打开
-
-可用下面命令确认当前目录里能看到 README_CN.md：
-
-```powershell
-dir
-```
-
-### 步骤 2：安装依赖（只需第一次）
-
-```powershell
-py -3 -m pip install -U pip
-py -3 -m pip install -r requirements.txt
-```
-
-如果上面报错“找不到 py”，把命令里的 py -3 换成 python 即可：
-
-```powershell
-python -m pip install -U pip
-python -m pip install -r requirements.txt
-```
-
-### 步骤 3：一键运行并生成图片
-
-```powershell
-py -3 orchestrator.py run-all --verbose
-```
-
-运行成功后，你会在 `outputs/` 里看到一个新版本目录（如 `v043/`），其中包含依赖图 `dependency_v043.png`。数据库文件位于 `outputs/courses.db`。
-
-### 常见小问题（立刻能救）
-
-- “py 不是内部或外部命令” → 用 `python` 替换 `py -3`，或重启 PowerShell 再试
-- “pip 不是内部或外部命令” → 用 `python -m pip ...` 代替 `pip ...`
-- “找不到 requirements.txt” → 先执行 `dir`，确认你在项目根目录
-- 网络/证书报错 → 稍后再试或换网络，首次下载页面可能慢一点
-- 看不到图片 → 确认 `outputs/` 里是否生成了最新 `vNNN/`，并检查里面是否有 `dependency_vNNN.png`
-
-### 进阶（可选）：使用虚拟环境，干净不影响系统
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\activate
-python -m pip install -U pip
-pip install -r requirements.txt
-python orchestrator.py run-all --verbose
-```
-
-退出虚拟环境：
-
-```powershell
-deactivate
-```
-
-## 架构
-
 ```text
 core/
   scraper/        # 网络与 HTTP 请求层
@@ -264,15 +180,6 @@ requirements.txt
 - `core.vis.roots.render_root_courses` 渲染根课程图（无前置课程的课程）
 - `orchestrator.py` 提供统一的 CLI 接口，包含多个子命令
 
-## 安装
-
-建议创建虚拟环境并安装依赖：
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\activate
-pip install -r requirements.txt
-```
 
 ## 使用方法
 
