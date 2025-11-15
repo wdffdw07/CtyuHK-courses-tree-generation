@@ -6,7 +6,23 @@
 
 按下面步骤一步一步来，无需懂编程：
 
-### 步骤 0：安装 uv 包管理器（只做一次）
+### 步骤 0：安装 Python（只做一次）
+
+**如果你还没有安装 Python：**
+
+1. 到 <https://www.python.org/downloads/> 下载 Python 3.11 或更高版本
+2. 安装时**务必勾选 "Add python.exe to PATH"**（很重要！）
+3. 点击 "Install Now" 安装
+
+安装完成后，打开新的 PowerShell 窗口，确认版本：
+
+```powershell
+python --version
+```
+
+应该看到类似 `Python 3.11.x` 或更高版本。
+
+### 步骤 1：安装 uv 包管理器（只做一次）
 
 uv 是一个现代化、快速的 Python 包管理器。用 pip 安装它：
 
@@ -43,6 +59,8 @@ uv pip install -r requirements.txt
 
 ### 常见小问题（立刻能救）
 
+- "python 不是内部或外部命令" → 先安装 Python（见步骤 0），安装时务必勾选 "Add to PATH"
+- "pip 不是内部或外部命令" → 安装 Python 后重启 PowerShell
 - "uv 不是内部或外部命令" → 先运行 `pip install uv`，或重启 PowerShell 再试
 - "找不到 requirements.txt" → 先执行 `dir`，确认你在项目根目录
 - 网络/证书报错 → 稍后再试或换网络，首次下载页面可能慢一点

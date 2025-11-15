@@ -8,7 +8,23 @@ This project scrapes City University (CityU) undergraduate curriculum major page
 
 Follow these step-by-step instructions (no programming experience required):
 
-### Step 0: Install uv Package Manager (One-Time Setup)
+### Step 0: Install Python (One-Time Setup)
+
+**If you don't have Python installed:**
+
+1. Download Python 3.11 or higher from <https://www.python.org/downloads/>
+2. During installation, **check "Add python.exe to PATH"** (important!)
+3. Click "Install Now"
+
+After installation, open a new PowerShell window and verify:
+
+```powershell
+python --version
+```
+
+You should see something like `Python 3.11.x` or higher.
+
+### Step 1: Install uv Package Manager (One-Time Setup)
 
 uv is a modern, fast Python package manager. Install it with pip:
 
@@ -45,6 +61,8 @@ That's it! uv handles everything for you.
 
 ### Common Beginner Issues (Instant Fixes)
 
+- "python is not recognized" → Install Python first (see Step 0), make sure to check "Add to PATH"
+- "pip is not recognized" → Restart PowerShell after installing Python
 - "uv is not recognized as a command" → Run `pip install uv` first, or restart PowerShell
 - "requirements.txt not found" → Run `dir` to confirm you're in the project root directory
 - Network/certificate errors → Try again later or switch networks; first-time downloads may be slow
