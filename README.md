@@ -8,21 +8,18 @@ This project scrapes City University (CityU) undergraduate curriculum major page
 
 Follow these step-by-step instructions (no programming experience required):
 
-### Step 0: Install Python (One-Time Setup)
+### Step 0: Install uv Package Manager (One-Time Setup)
 
-- Download and install Python 3.11 or higher from <https://www.python.org/downloads/>
-- During installation, check "Add python.exe to PATH" (if shown)
-
-After installation, open a new PowerShell window and verify:
+uv is a modern, fast Python package manager. Install it with pip:
 
 ```powershell
-py -3 --version
+pip install uv
 ```
 
-If `py` command is not found, try:
+Verify installation:
 
 ```powershell
-python --version
+uv --version
 ```
 
 ### Step 1: Open Project Folder in PowerShell
@@ -38,40 +35,19 @@ dir
 
 ### Step 2: Install Dependencies (First Time Only)
 
-```powershell
-py -3 -m pip install -U pip
-py -3 -m pip install -r requirements.txt
-```
-
-If you get "py not found" error, replace `py -3` with `python`:
+uv automatically creates and manages a virtual environment:
 
 ```powershell
-python -m pip install -U pip
-python -m pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
+
+That's it! uv handles everything for you.
 
 ### Common Beginner Issues (Instant Fixes)
 
-- "py is not recognized as a command" → Use `python` instead of `py -3`, or restart PowerShell
-- "pip is not recognized" → Use `python -m pip ...` instead of `pip ...`
+- "uv is not recognized as a command" → Run `pip install uv` first, or restart PowerShell
 - "requirements.txt not found" → Run `dir` to confirm you're in the project root directory
 - Network/certificate errors → Try again later or switch networks; first-time downloads may be slow
-
-### Advanced (Optional): Use Virtual Environment for Clean Isolation
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\activate
-python -m pip install -U pip
-pip install -r requirements.txt
-python orchestrator.py run-all --verbose
-```
-
-To exit the virtual environment:
-
-```powershell
-deactivate
-```
 
 ---
 
@@ -114,7 +90,7 @@ Before running, you need to configure your major course URL.
 ### Step 1: Run the Command in PowerShell
 
 ```powershell
-py -3 orchestrator.py run-all --verbose
+uv run python orchestrator.py run-all --verbose
 ```
 
 ### Step 2: View the Generated Images
@@ -132,7 +108,7 @@ The database file is located at `outputs/courses.db`.
 
 | Problem | Solution |
 |---------|----------|
-| "py is not recognized" | Use `python` instead of `py -3`, or restart PowerShell |
+| "uv is not recognized" | Run `pip install uv` first, then restart PowerShell |
 | No images generated | Check network connection; verify `outputs/courses.db` exists; re-run |
 | Nodes overlapping | Open `config/visualize_dependency.toml`, reduce `max_per_layer` (e.g., set to 3) |
 | Missing prerequisites | Some pages use "Precursors" instead of "Prerequisites" (not currently parsed) |
@@ -286,41 +262,26 @@ use_cache = false  # true=use cache, false=re-download every time
 
 ### Environment Setup (Windows)
 
-Two options, pick one:
-
-Option A) Use system Python (easiest)
+Install uv package manager:
 
 ```powershell
-py -3 -m pip install -U pip
-py -3 -m pip install -r requirements.txt
+pip install uv
 ```
 
-Then run with the same interpreter path:
+Install project dependencies:
 
 ```powershell
-py -3 orchestrator.py run-all --verbose
+uv pip install -r requirements.txt
 ```
 
-Option B) Use a virtual environment (clean isolation)
-
-```powershell
-python -m venv .venv
-. .venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-Then run:
-
-```powershell
-python orchestrator.py run-all --verbose
-```
+uv automatically creates and manages a virtual environment for you.
 
 ### One-Click Full Pipeline
 
 Use the `run-all` command to execute the complete workflow: scrape → build database → ask if generate visualizations → interactive course query
 
 ```powershell
-py -3 orchestrator.py run-all --verbose
+uv run python orchestrator.py run-all --verbose
 ```
 
 This will:

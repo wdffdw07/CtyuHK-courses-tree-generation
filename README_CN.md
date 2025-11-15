@@ -6,21 +6,18 @@
 
 按下面步骤一步一步来，无需懂编程：
 
-### 步骤 0：安装 Python（只做一次）
+### 步骤 0：安装 uv 包管理器（只做一次）
 
-- 到 <https://www.python.org/downloads/> 下载并安装 Python 3.11 或更高版本
-- 安装时勾选 "Add python.exe to PATH"（如果看到了）
-
-安装好后，打开新的 PowerShell 窗口，确认版本：
+uv 是一个现代化、快速的 Python 包管理器。用 pip 安装它：
 
 ```powershell
-py -3 --version
+pip install uv
 ```
 
-如果提示找不到 py 命令，请改用：
+确认安装成功：
 
 ```powershell
-python --version
+uv --version
 ```
 
 ### 步骤 1：在 PowerShell 打开本项目文件夹
@@ -36,40 +33,19 @@ dir
 
 ### 步骤 2：安装依赖（只需第一次）
 
-```powershell
-py -3 -m pip install -U pip
-py -3 -m pip install -r requirements.txt
-```
-
-如果上面报错"找不到 py"，把命令里的 py -3 换成 python 即可：
+uv 会自动创建并管理虚拟环境：
 
 ```powershell
-python -m pip install -U pip
-python -m pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
+
+就这么简单！uv 会帮你处理好一切。
 
 ### 常见小问题（立刻能救）
 
-- "py 不是内部或外部命令" → 用 `python` 替换 `py -3`，或重启 PowerShell 再试
-- "pip 不是内部或外部命令" → 用 `python -m pip ...` 代替 `pip ...`
+- "uv 不是内部或外部命令" → 先运行 `pip install uv`，或重启 PowerShell 再试
 - "找不到 requirements.txt" → 先执行 `dir`，确认你在项目根目录
 - 网络/证书报错 → 稍后再试或换网络，首次下载页面可能慢一点
-
-### 进阶（可选）：使用虚拟环境，干净不影响系统
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\activate
-python -m pip install -U pip
-pip install -r requirements.txt
-python orchestrator.py run-all --verbose
-```
-
-退出虚拟环境：
-
-```powershell
-deactivate
-```
 
 ---
 
@@ -112,7 +88,7 @@ deactivate
 ### 第一步：在 PowerShell 运行命令
 
 ```powershell
-py -3 orchestrator.py run-all --verbose
+uv run python orchestrator.py run-all --verbose
 ```
 
 ### 第二步：查看生成的图片
@@ -130,7 +106,7 @@ py -3 orchestrator.py run-all --verbose
 
 | 问题 | 快速解决 |
 |------|----------|
-| "py 不是内部或外部命令" | 用 `python` 替换 `py -3`，或重启 PowerShell |
+| "uv 不是内部或外部命令" | 先运行 `pip install uv`，然后重启 PowerShell |
 | 没生成图片 | 检查是否有网络；确认 `outputs/courses.db` 存在；重跑一次 |
 | 节点挤成一团 | 打开 `config/visualize_dependency.toml`，把 `max_per_layer` 改小（如改成 3） |
 | 前置课程显示不全 | 页面使用 "Precursors" 而非 "Prerequisites"，当前版本暂不支持 |
@@ -301,7 +277,7 @@ use_cache = false  # true则使用缓存，false则每次重新下载
 使用 `run-all` 命令执行完整流程：爬取 → 构建数据库 → 询问是否生成图像 → 交互式课程查询
 
 ```powershell
-py -3 orchestrator.py run-all --verbose
+uv run python orchestrator.py run-all --verbose
 ```
 
 执行后会完成：
